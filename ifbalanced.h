@@ -9,8 +9,14 @@
 #include <netdb.h>
 
 #define gdecl(t,v) t v
+#ifdef HAVE_KLOG
+#include "klog.h"
+#define gprintf(fmt, args...) klog_write(KLOG_ERROR_LEVEL, "[%s:%d] " fmt "\n", __FILE__, __LINE__, ##args)
+#define gerror(fmt, args...) klog_write(KLOG_INFO_LEVEL, "[%s:%d] " fmt "\n", __FILE__, __LINE__, ##args)
+#else
 #define gprintf(fmt, args...) fprintf(stderr, "[INFO][%s:%d] " fmt "\n", __FILE__, __LINE__, ##args)
 #define gerror(fmt, args...) fprintf(stderr, "[ERR][%s:%d] " fmt "\n", __FILE__, __LINE__, ##args)
+#endif
 
 #undef satosin
 #define satosin(x) ((struct sockaddr_in *) x)
