@@ -29,8 +29,6 @@ freeaddrinfo_t true_freeaddrinfo;
 getnameinfo_t true_getnameinfo;
 gethostbyaddr_t true_gethostbyaddr;
 
-pthread_once_t init_once = PTHREAD_ONCE_INIT;
-
 static void* load_sym(char* symname, void* proxyfunc) {
 
 	void *funcptr = dlsym(RTLD_NEXT, symname);
@@ -49,6 +47,7 @@ static void* load_sym(char* symname, void* proxyfunc) {
 }
 
 static void do_init(void);
+static void do_free(void);
 
 /* if we use gcc >= 3, we can instruct the dynamic loader 
  * to call init_lib at link time. otherwise it gets loaded
@@ -56,9 +55,15 @@ static void do_init(void);
  * race condition if 2 threads call it before init_l is set 
  * and PTHREAD support was disabled */
 #if __GNUC__ > 2
+static pthread_once_t init_once = PTHREAD_ONCE_INIT;
 __attribute__((constructor))
 static void gcc_init(void) {
 	pthread_once(&init_once, do_init);
+}
+static pthread_once_t free_once = PTHREAD_ONCE_INIT;
+__attribute__((destructor))
+static void gcc_free(void) {
+	pthread_once(&free_once, do_free);
 }
 #endif
 
@@ -79,6 +84,10 @@ static void do_init(void) {
 	SETUP_SYM(freeaddrinfo);
 	SETUP_SYM(gethostbyaddr);
 	SETUP_SYM(getnameinfo);
+}
+
+static void do_free(void) {
+	gprintf("network interface balanced free ...");
 }
 
 int connect(int fd, const struct sockaddr *addr, unsigned int len) {
