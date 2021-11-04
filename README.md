@@ -15,3 +15,9 @@ Network interface balanced(Supported for TCP or UDP).
   * interface(string): network card interface name
   * localaddr(string): ipv4 address
   * prefixlen(integer): if is 255.255.255.0 then 24
+
+### modify config file /etc/sysctl.conf
+```
+net.ipv4.conf.all.rp_filter=0
+net.ipv4.conf.default.rp_filter=0
+```
