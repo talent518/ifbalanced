@@ -13,7 +13,7 @@ endif
 all: libifbalanced.so
 
 test: libifbalanced.so
-	@LD_PRELOAD=$(PWD)/libifbalanced.so curl --connect-timeout 3 -v -4 -L baike.baidu.com news.baidu.com
+	@LD_PRELOAD=$(PWD)/libifbalanced.so IFBALANCED_FILE=ifbalanced.conf curl -s --connect-timeout 3 -v -4 -L baike.baidu.com news.baidu.com
 
 libifbalanced.so: ifbalanced.o klog.o api.o
 	@echo LD $@
