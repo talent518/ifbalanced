@@ -25,9 +25,12 @@
 #include <dlfcn.h>
 #include <pthread.h>
 #include <math.h>
+#include <sys/prctl.h>
 
 #include "ifbalanced.h"
 #include "api.h"
+
+char comm[128];
 
 #undef satosin
 #define satosin(x) ((struct sockaddr_in *) x)
@@ -56,7 +59,7 @@ static void* load_sym(char* symname, void* proxyfunc) {
 		gerror("Cannot load symbol '%s' %s", symname, dlerror());
 		exit(1);
 	} else {
-		gprintf("loaded symbol '%s'" " real addr %p  wrapped addr %p", symname, funcptr, proxyfunc);
+		gdebug("loaded symbol '%s'" " real addr %p  wrapped addr %p", symname, funcptr, proxyfunc);
 	}
 	if(funcptr == proxyfunc) {
 		gerror("circular reference detected, aborting!");
@@ -112,13 +115,10 @@ static pubnet_t pubs[16];
 static pthread_mutex_t mutex;
 
 static void do_init(void) {
-#ifdef HAVE_KLOG
-	{
-		char *level = getenv("IFBALANCED_LEVEL");
-		if(level) klog_set_level(atoi(level));
-	}
-#endif
-	gprintf("network interface balanced init ...");
+	if(prctl(PR_GET_NAME, comm)) strcpy(comm, "-");
+
+	openlog("pstree", LOG_PID, LOG_USER);
+	gdebug("network interface balanced init ...");
 
 	SETUP_SYM(socket);
 	SETUP_SYM(connect);
@@ -197,7 +197,7 @@ static void do_init(void) {
 }
 
 static void do_free(void) {
-	gprintf("network interface balanced free ...");
+	gdebug("network interface balanced free ...");
 	if(is_init) {
 		pthread_mutex_destroy(&mutex);
 	}
@@ -287,7 +287,7 @@ int socket(int domain, int type, int protocol) {
 
 int connect(int fd, const struct sockaddr *addr, unsigned int len) {
 	if(is_init && satosin(addr)->sin_family == AF_INET) {
-		gdecl(char, buf[256]);
+		char buf[64];
 		gprintf("connect %d to %s:%d", fd, addr2str(addr, buf), addr2port(addr));
 
 		localaddr_bind(fd, satosin(addr), __func__);
@@ -298,7 +298,7 @@ int connect(int fd, const struct sockaddr *addr, unsigned int len) {
 
 ssize_t sendto(int fd, const void *buf, size_t len, int flags, const struct sockaddr *addr, socklen_t addrlen) {
 	if(is_init && satosin(addr)->sin_family == AF_INET) {
-		gdecl(char, buf2[256]);
+		char buf2[64];
 		gprintf("sendto %d to %s:%d", fd, addr2str(addr, buf2), addr2port(addr));
 
 		localaddr_bind(fd, satosin(addr), __func__);

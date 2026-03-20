@@ -1,6 +1,34 @@
 # ifbalanced
 Network interface balanced(Supported for TCP or UDP).
 
+### compile
+```sh
+make
+```
+### install
+```sh
+make install
+```
+### usage 1
+```sh
+LD_PRELOAD=$PWD/libifbalanced.so IFBALANCED_FILE=$PWD/ifbalanced.conf command [argument...]
+```
+### usage 2
+```sh
+ifbalanced command [argument...]
+```
+### syslog
+```sh
+sudo tail -f /var/log/syslog
+```
+### test
+```sh
+make test
+```
+### debug
+```sh
+CFLAGS=-DUSE_GDEBUG make clean test
+```
 ### environment variables
 * IFBALANCED_LEVEL: set ifbalanced klog level(error: 3, info: 6)
 * IFBALANCED_FILE: set ifbalanced config file(default: "/etc/ifbalanced.conf")

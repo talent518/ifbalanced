@@ -1,21 +1,17 @@
 #ifndef _IFBALANCED_H
 #define _IFBALANCED_H
 
-#include <unistd.h>
-#include <stdint.h>
-#include <netinet/in.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
+#include <syslog.h>
 
-#define gdecl(t,v) t v
-#ifdef HAVE_KLOG
-#include "klog.h"
-#define gprintf(fmt, args...) KLOG_INFO("ifBalanced", "[%s:%d] " fmt "\n", __FILE__, __LINE__, ##args)
-#define gerror(fmt, args...) KLOG_ERROR("ifBalanced", "[%s:%d] " fmt "\n", __FILE__, __LINE__, ##args)
+#ifdef USE_GDEBUG
+#   define gdebug(fmt, args...) syslog(LOG_DEBUG, "[%d][%s][%s] " fmt "\n", getppid(), comm, __func__, ##args)
 #else
-#define gprintf(fmt, args...) fprintf(stderr, "[INFO][%s:%d] " fmt "\n", __FILE__, __LINE__, ##args)
-#define gerror(fmt, args...) fprintf(stderr, "[ERR][%s:%d] " fmt "\n", __FILE__, __LINE__, ##args)
+#   define gdebug(fmt, args...)
 #endif
+
+#define gprintf(fmt, args...) syslog(LOG_INFO, "[%d][%s][%s] " fmt "\n", getppid(), comm, __func__, ##args)
+#define gerror(fmt, args...) syslog(LOG_ERR, "[%d][%s][%s] " fmt "\n", getppid(), comm, __func__, ##args)
+
+extern char comm[];
 
 #endif
